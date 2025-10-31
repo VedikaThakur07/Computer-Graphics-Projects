@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Q5: Moving Car Animation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style> canvas{border:2px solid #334155; background:#e0f2fe; display:block; margin:20px auto;} body{font-family:Inter,sans-serif;} </style>
+</head>
+<body class="bg-slate-800 text-slate-100 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-slate-700 p-6 rounded-lg shadow-2xl w-full max-w-3xl">
+    <h1 class="text-cyan-400 text-center text-2xl mb-3">Q5: Moving Car Animation</h1>
+    <canvas id="carCanvas" width="800" height="400"></canvas>
+  </div>
+
+  <script>
+    const c = document.getElementById('carCanvas');
+    const ctx = c.getContext('2d');
+    
+    // Zameen kahan hai, pahiye kitne bade hain
+    const groundY = 300, wheelRadius = 20;
+    // Car kahan se shuru hogi, speed kya hai
+    let carX = -150, carSpeed = 2, rotationAngle = 0;
+
+    // Pahiya (wheel) banane ka function
+    function drawWheel(cx, cy, r, angleDeg){
+      ctx.save(); // Puraane settings save karo
+      ctx.translate(cx, cy); // Pahiye ke center par jao
+      ctx.rotate(angleDeg*Math.PI/180); // Ghumaao
+      
+      // Tire banao
+      ctx.beginPath(); ctx.arc(0,0,r,0,2*Math.PI); ctx.fillStyle='#0f172a'; ctx.fill();
+      ctx.strokeStyle='#94a3b8'; ctx.stroke();
+      
+      // Spokes (teeliyan) banao
+      ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=2;
+      for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-r); ctx.stroke(); ctx.rotate(Math.PI/2); }
+      
+      ctx.restore(); // Settings wapas reset karo
+    }
+
+    // Car banane ka function
+    function drawCar(x,y,angle){
+      // Zameen (hari patti)
+      ctx.fillStyle='#65a30d'; ctx.fillRect(0, groundY + wheelRadius, c.width, c.height - groundY);
+      
+      ctx.save();
+      ctx.translate(x,y); // Car ki position par jao
+      
+      // Car ki body (laal)
+      ctx.fillStyle='#e11d48'; ctx.fillRect(-60,-40,120,40); // Neeche ka hissa
+      ctx.fillStyle='#be123c'; ctx.fillRect(-40,-70,80,30);  // Upar ka hissa (roof)
+      
+      // Pahiye banao
+      drawWheel(-40,0,wheelRadius,angle); // Peeche wala
+      drawWheel(40,0,wheelRadius,angle);  // Aage wala
+      
+      ctx.restore();
+    }
+
+    // Animation ka loop (jo hamesha chalta rehta hai)
+    function animate(){
+      ctx.clearRect(0,0,c.width,c.height); // Screen saaf karo
+      
+      // Car ko aage badhao
+      carX += carSpeed; 
+      if(carX > c.width + 150) carX = -150; // Agar screen se bahar jaaye toh wapas le aao
+      
+      // Pahiye kitna ghumege
+      const circumference = 2*Math.PI*wheelRadius;
+      const rotationPerFrame = (carSpeed / circumference) * 360;
+      rotationAngle += rotationPerFrame;
+      
+      // Car ko naye position par banao
+      drawCar(carX, groundY, rotationAngle);
+      
+      requestAnimationFrame(animate); // Is function ko baar baar chalao
+    }
+    
+    // Animation shuru karo
+    animate();
+  </script>
+</body>
+</html>

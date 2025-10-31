@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Q4: Scan-line Polygon Fill</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas { border: 2px solid #334155; background: #f1f5f9; display:block; margin:0 auto; }
+        body{font-family:Inter,sans-serif}
+    </style>
+</head>
+<body class="bg-slate-800 text-slate-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-slate-700 p-6 rounded-lg shadow-2xl w-full max-w-2xl">
+    <h1 class="text-2xl font-bold text-center mb-4 text-cyan-400">Q4: Scan-line Polygon Fill</h1>
+    <p class="text-center text-slate-300 mb-4">This demo fills a pre-defined concave polygon using the scan-line algorithm.</p>
+    <button id="drawBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded w-full mb-4">Draw & Fill Polygon</button>
+    
+    <canvas id="graphicsCanvas" width="500" height="400"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('graphicsCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    // Hamara polygon (jise humein fill karna hai)
+    // Yeh "World" coordinates mein hai (origin center mein)
+    const polygonPoints = [
+        { x: -150, y: -50 },
+        { x: -80,  y: 120 },
+        { x: 0,    y: 60 },  // Yeh point ise concave banata hai
+        { x: 120,  y: 140 },
+        { x: 200,  y: -40 },
+        { x: 60,   y: -120 },
+        { x: -100, y: -100 }
+    ];
+
+    // World coordinates (origin at center) ko Canvas coordinates (origin at top-left) mein badalta hai
+    function toCanvas(x, y) {
+      return {
+        cx: x + canvasWidth / 2,
+        cy: canvasHeight / 2 - y 
+      };
+    }
+    
+    // X-Y axis draw karne ke liye
+    function drawAxes(){
+      ctx.strokeStyle = '#cbd5e1'; 
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const origin = toCanvas(0, 0);
+      ctx.moveTo(0, origin.cy); ctx.lineTo(canvasWidth, origin.cy); ctx.stroke(); // X-axis
+      ctx.moveTo(origin.cx, 0); ctx.lineTo(origin.cx, canvasHeight); ctx.stroke(); // Y-axis
+    }
+
+    // Polygon ki boundary draw karne ka function
+    function drawPolygonOutline(points, color = 'black') {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let p0 = toCanvas(points[0].x, points[0].y);
+        ctx.moveTo(p0.cx, p0.cy);
+        for(let i = 1; i < points.length; i++) {
+            let p = toCanvas(points[i].x, points[i].y);
+            ctx.lineTo(p.cx, p.cy);
+        }
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    // --- Scan-line Fill Algorithm ---
+    function fillScanline() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        drawAxes();
+        
+        let yMin = Infinity;
+        let yMax = -Infinity;
+        
+        // Polygon ko canvas coordinates mein convert karo aur yMin/yMax dhoondo
+        const canvasPoints = polygonPoints.map(p => {
+            const cp = toCanvas(p.x, p.y);
+            yMin = Math.min(yMin, cp.cy);
+            yMax = Math.max(yMax, cp.cy);
+            return cp;
+        });
+
+        yMin = Math.round(yMin);
+        yMax = Math.round(yMax);
+        
+        ctx.fillStyle = 'rgba(30, 144, 255, 0.7)'; // Neela rang (thoda transparent)
+        
+        // Har scanline (y ki value) ke liye loop
+        for (let y = yMin; y <= yMax; y++) {
+            let intersections = [];
+            // Polygon ki har edge (line) ko check karo
+            for (let i = 0; i < canvasPoints.length; i++) {
+                let p1 = canvasPoints[i];
+                let p2 = canvasPoints[(i + 1) % canvasPoints.length]; // Aakhri point se pehle point
+
+                // Check karo ki line scanline ko cross karti hai ya nahi
+                if ((p1.cy <= y && p2.cy > y) || (p2.cy <= y && p1.cy > y)) {
+                    // Intersection ka X coordinate calculate karo
+                    let x_intersect = (y - p1.cy) * (p2.cx - p1.cx) / (p2.cy - p1.cy) + p1.cx;
+                    intersections.push(x_intersect);
+                }
+            }
+            
+            // Sabhi intersections ko sort karo (left se right)
+            intersections.sort((a, b) => a - b);
+            
+            // Intersections ke pairs (jode) ke beech mein line draw karo
+            for (let k = 0; k < intersections.length; k += 2) {
+                if (k + 1 < intersections.length) {
+                    let x_start = Math.round(intersections[k]);
+                    let x_end = Math.round(intersections[k+1]);
+                    
+                    // Fill karne ke liye line banao
+                    ctx.beginPath();
+                    ctx.moveTo(x_start, y);
+                    ctx.lineTo(x_end, y);
+                    ctx.strokeStyle = ctx.fillStyle;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Fill karne ke baad, upar se outline banao (taaki saaf dikhe)
+        drawPolygonOutline(polygonPoints, 'black');
+    }
+
+    document.getElementById('drawBtn').addEventListener('click', fillScanline);
+    fillScanline(); // Page load hote hi draw karo
+  </script>
+</body>
+</html>

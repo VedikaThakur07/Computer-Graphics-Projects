@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Q2: DDA Line Drawing Algorithm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas { border: 2px solid #334155; background: #f1f5f9; display:block; margin:0 auto; }
+        body{font-family:Inter,sans-serif}
+        input { color: #000; padding: 4px 8px; border-radius: 4px; border: 1px solid #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-800 text-slate-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-slate-700 p-6 rounded-lg shadow-2xl w-full max-w-2xl">
+    <h1 class="text-2xl font-bold text-center mb-4 text-cyan-400">Q2: DDA Line Drawing Algorithm</h1>
+    
+    <!-- Input lene ke liye form -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 items-center">
+      <div><label>X1:</label> <input type="number" id="x1" value="-150"></div>
+      <div><label>Y1:</label> <input type="number" id="y1" value="-100"></div>
+      <div><label>X2:</label> <input type="number" id="x2" value="180"></div>
+      <div><label>Y2:</label> <input type="number" id="y2" value="120"></div>
+    </div>
+    <button id="drawBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded w-full mb-4">Draw DDA Line</button>
+    
+    <canvas id="graphicsCanvas" width="500" height="300"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('graphicsCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // Yeh function hamare (0,0) ko canvas ke center mein le aata hai
+    // World coordinates (origin at center) ko Canvas coordinates (origin at top-left) mein badalta hai
+    function toCanvas(x, y) {
+      return {
+        cx: x + canvasWidth / 2,
+        cy: canvasHeight / 2 - y 
+      };
+    }
+
+    // X-Y axis draw karne ke liye
+    function drawAxes(){
+      ctx.strokeStyle = '#cbd5e1'; // Halka gray rang
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      // toCanvas(0, 0) se center point milta hai
+      const origin = toCanvas(0, 0);
+      ctx.moveTo(0, origin.cy); ctx.lineTo(canvasWidth, origin.cy); ctx.stroke(); // X-axis
+      ctx.moveTo(origin.cx, 0); ctx.lineTo(origin.cx, canvasHeight); ctx.stroke(); // Y-axis
+    }
+    
+    // Pixel draw karne ka function (1x1 ka rectangle banakar)
+    function drawPixel(x, y, color = 'black') {
+        const p = toCanvas(x, y); // Coordinates ko badlo
+        ctx.fillStyle = color;
+        ctx.fillRect(p.cx, p.cy, 1, 1); // Sirf 1 pixel draw karo
+    }
+
+    // --- DDA Algorithm ---
+    function drawDDALine() {
+      // Inputs se values lo
+      const x1 = parseInt(document.getElementById('x1').value);
+      const y1 = parseInt(document.getElementById('y1').value);
+      const x2 = parseInt(document.getElementById('x2').value);
+      const y2 = parseInt(document.getElementById('y2').value);
+      
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Canvas saaf karo
+      drawAxes(); // Axis banao
+
+      let dx = x2 - x1;
+      let dy = y2 - y1;
+      let steps;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        steps = Math.abs(dx);
+      } else {
+        steps = Math.abs(dy);
+      }
+
+      let x_inc = dx / steps;
+      let y_inc = dy / steps;
+
+      let x = x1;
+      let y = y1;
+
+      // Pehla pixel
+      drawPixel(Math.round(x), Math.round(y));
+
+      // Baaki pixels loop mein
+      for (let k = 0; k < steps; k++) {
+        x = x + x_inc;
+        y = y + y_inc;
+        drawPixel(Math.round(x), Math.round(y));
+      }
+    }
+
+    document.getElementById('drawBtn').addEventListener('click', drawDDALine);
+    
+    // Page load hote hi default line banao
+    drawDDALine();
+  </script>
+</body>
+</html>

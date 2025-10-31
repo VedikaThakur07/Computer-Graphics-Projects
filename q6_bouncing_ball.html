@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Q6: Bouncing Ball Animation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style> canvas{border:2px solid #334155; background:#e0f2fe; display:block; margin:20px auto;} body{font-family:Inter,sans-serif;} </style>
+</head>
+<body class="bg-slate-800 text-slate-100 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-slate-700 p-6 rounded-lg shadow-2xl w-full max-w-3xl">
+    <h1 class="text-cyan-400 text-center text-2xl mb-3">Q6: Bouncing Ball Animation</h1>
+    <canvas id="ballCanvas" width="800" height="400"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('ballCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Physics ke parameters
+    const gravity = 0.4; // Neeche kheenchne ki taakat
+    const damping = 0.8; // Bounce mein kitni energy kam hogi
+    const ballCount = 5; // Kitni balls
+    const groundY = canvas.height - 40; // Zameen kahan hai
+
+    const balls = []; // Khali array (list)
+    const colors = ["#ef4444","#22c55e","#3b82f6","#f59e0b","#a855f7"];
+
+    // 5 balls bana kar array mein daalo
+    for(let i=0;i<ballCount;i++){
+      balls.push({ 
+        x:100+i*120, // X position
+        y:50+Math.random()*50, // Y position
+        vx:(Math.random()*4)-2, // X speed
+        vy:(Math.random()*2)-1, // Y speed
+        r:20+Math.random()*10, // Size (radius)
+        color:colors[i%colors.length] // Rang
+      });
+    }
+
+    // Ball banane ka function
+    function drawBall(ball){
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, 2*Math.PI);
+      ctx.fillStyle = ball.color; ctx.fill();
+      ctx.strokeStyle = "#1e293b"; ctx.lineWidth=2; ctx.stroke();
+    }
+
+    // Ball ki position update karne ka function
+    function updateBall(ball){
+      ball.vy += gravity; // Gravity daalo
+      ball.x += ball.vx;  // X position badlo (Translation)
+      ball.y += ball.vy;  // Y position badlo (Translation)
+      
+      // Zameen se takraane (bounce) ka check (Reflection)
+      if(ball.y + ball.r >= groundY){ 
+        ball.y = groundY - ball.r; // Zameen se bahar na jaaye
+        ball.vy = -ball.vy * damping; // Speed ulti kar do (bounce)
+        ball.vx *= 0.98; // Zameen par ragadne se speed kam karo
+      }
+      // Deewaron se takraane ka check
+      if(ball.x - ball.r <= 0){ ball.x = ball.r; ball.vx = -ball.vx * damping; }
+      else if(ball.x + ball.r >= canvas.width){ ball.x = canvas.width - ball.r; ball.vx = -ball.vx * damping; }
+      // Chhat (ceiling) se takraane ka check
+      if(ball.y - ball.r <= 0){ ball.y = ball.r; ball.vy = -ball.vy * damping; }
+    }
+
+    // Animation ka loop
+    function animate(){
+      ctx.clearRect(0,0,canvas.width,canvas.height); // Screen saaf karo
+      
+      // Zameen banao (hari patti)
+      ctx.fillStyle='#65a30d'; ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+      
+      // Har ball ko update karo aur banao
+      for(let b of balls){ 
+        updateBall(b); 
+        drawBall(b); 
+      }
+      
+      requestAnimationFrame(animate); // Is function ko baar baar chalao
+    }
+    
+    // Animation shuru karo
+    animate();
+  </script>
+</body>
+</html>
